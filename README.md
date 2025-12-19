@@ -1,0 +1,1 @@
+A collection of spline-rendering algorithms written to be used with WebGPU framework.
