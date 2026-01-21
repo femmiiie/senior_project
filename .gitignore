@@ -1,0 +1,9 @@
+**/*.dll
+**/*.exe
+build/
+external/
+
+.cache
+.clangd
+
+.vscode/
