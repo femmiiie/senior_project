@@ -1,22 +1,23 @@
 // THIS IS A MODIFIED VERSION OF https://eliemichel.github.io/LearnWebGPU/basic-3d-rendering/hello-triangle.html FOR TESTING WORKING BUILD
 
 // Include the C++ wrapper instead of the raw header(s)
-#define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#else
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <glfw3webgpu.h>
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif // __EMSCRIPTEN__
+#endif
 
 #include <iostream>
 #include <cassert>
 #include <vector>
 #include <cstring>
+
+#include "Application.h"
 
 using namespace wgpu;
 
@@ -41,166 +42,18 @@ fn fs_main() -> @location(0) vec4f {
 }
 )";
 
-class Application
+Application::Application(RenderContext &context) : context(context)
 {
-public:
-  // Initialize everything and return true if it went all right
-  bool Initialize();
-
-  // Uninitialize everything that was initialized
-  void Terminate();
-
-  // Draw a frame and handle events
-  void MainLoop();
-
-  // Return true as long as the main loop should keep on running
-  bool IsRunning();
-
-private:
-  TextureView GetNextSurfaceTextureView();
-
-  // Substep of Initialize() that creates the render pipeline
-  void InitializePipeline();
-
-private:
-  // We put here all the variables that are shared between init and main loop
-  GLFWwindow *window;
-  Device device;
-  Queue queue;
-  Surface surface;
-  TextureFormat surfaceFormat = TextureFormat::Undefined;
-  RenderPipeline pipeline;
-};
-
-int main()
-{
-  Application app;
-
-  if (!app.Initialize())
-  {
-    return 1;
-  }
-
-#ifdef __EMSCRIPTEN__
-  // Equivalent of the main loop when using Emscripten:
-  auto callback = [](void *arg)
-  {
-    Application *pApp = reinterpret_cast<Application *>(arg);
-    pApp->MainLoop(); // 4. We can use the application object
-  };
-  emscripten_set_main_loop_arg(callback, &app, 0, true);
-#else  // __EMSCRIPTEN__
-  while (app.IsRunning())
-  {
-    app.MainLoop();
-  }
-#endif // __EMSCRIPTEN__
-
-  app.Terminate();
-
-  return 0;
+  this->InitializePipeline();
 }
 
-bool Application::Initialize()
-{
-  // Open window
-  if (!glfwInit())
-  {
-    std::cerr << "Failed to initialize GLFW!" << std::endl;
-    return false;
-  }
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  window = glfwCreateWindow(640, 480, "Learn WebGPU", nullptr, nullptr);
-  if (!window)
-  {
-    std::cerr << "Failed to create GLFW window!" << std::endl;
-    glfwTerminate();
-    return false;
-  }
-
-  InstanceDescriptor instanceDesc = {};
-  Instance instance = wgpuCreateInstance(&instanceDesc);
-  if (!instance)
-  {
-    std::cerr << "Failed to create WebGPU instance!" << std::endl;
-    return false;
-  }
-  std::cout << "Created instance: " << instance << std::endl;
-
-  WGPUSurface rawSurface = glfwCreateWindowWGPUSurface(instance, window);
-  if (!rawSurface)
-  {
-    std::cerr << "Failed to create surface!" << std::endl;
-    return false;
-  }
-  surface = Surface(rawSurface);
-  std::cout << "Created surface: " << surface << std::endl;
-
-  std::cout << "Requesting adapter..." << std::endl;
-  RequestAdapterOptions adapterOpts = {};
-  adapterOpts.compatibleSurface = surface;
-  Adapter adapter = instance.requestAdapter(adapterOpts);
-  std::cout << "Got adapter: " << adapter << std::endl;
-
-  std::cout << "Requesting device..." << std::endl;
-  DeviceDescriptor deviceDesc = {};
-  deviceDesc.label = WGPU_STRING_VIEW_INIT;
-  deviceDesc.requiredFeatureCount = 0;
-  deviceDesc.requiredLimits = nullptr;
-  deviceDesc.defaultQueue.nextInChain = nullptr;
-  deviceDesc.defaultQueue.label = WGPU_STRING_VIEW_INIT;
-
-  device = adapter.requestDevice(deviceDesc);
-  std::cout << "Got device: " << device << std::endl;
-
-  queue = device.getQueue();
-
-  // Configure the surface
-  SurfaceConfiguration config = {};
-
-  // Configuration of the textures created for the underlying swap chain
-  config.width = 640;
-  config.height = 480;
-  config.usage = TextureUsage::RenderAttachment;
-  SurfaceCapabilities capabilities;
-  surface.getCapabilities(adapter, &capabilities);
-  surfaceFormat = capabilities.formats[0];
-  config.format = surfaceFormat;
-
-  // And we do not need any particular view format:
-  config.viewFormatCount = 0;
-  config.viewFormats = nullptr;
-  config.device = device;
-  config.presentMode = PresentMode::Fifo;
-  config.alphaMode = CompositeAlphaMode::Auto;
-
-  surface.configure(config);
-
-  // Release the adapter and instance after configuration
-  adapter.release();
-  instance.release();
-
-  InitializePipeline();
-
-  return true;
-}
-
-void Application::Terminate()
+Application::~Application()
 {
   pipeline.release();
-  surface.unconfigure();
-  queue.release();
-  surface.release();
-  device.release();
-  glfwDestroyWindow(window);
-  glfwTerminate();
 }
 
 void Application::MainLoop()
 {
-  glfwPollEvents();
-
   // Get the next target texture view
   TextureView targetView = GetNextSurfaceTextureView();
   if (!targetView)
@@ -209,7 +62,7 @@ void Application::MainLoop()
   // Create a command encoder for the draw call
   CommandEncoderDescriptor encoderDesc = {};
   encoderDesc.label = WGPU_STRING_VIEW_INIT;
-  CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, &encoderDesc);
+  CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(this->context.device, &encoderDesc);
 
   // Create the render pass that clears the screen with our color
   RenderPassDescriptor renderPassDesc = {};
@@ -247,33 +100,33 @@ void Application::MainLoop()
   encoder.release();
 
   // std::cout << "Submitting command..." << std::endl;
-  queue.submit(1, &command);
+  context.queue.submit(1, &command);
   command.release();
   // std::cout << "Command submitted." << std::endl;
 
   // At the enc of the frame
   targetView.release();
 #ifndef __EMSCRIPTEN__
-  surface.present();
+  context.surface.present();
 #endif
 
 #if defined(WEBGPU_BACKEND_DAWN)
-  device.tick();
+  this->context.device.tick();
 #elif defined(WEBGPU_BACKEND_WGPU)
-  device.poll(false, nullptr);
+  this->context.device.poll(false, nullptr);
 #endif
 }
 
 bool Application::IsRunning()
 {
-  return !glfwWindowShouldClose(window);
+  return this->context.isRunning();
 }
 
 TextureView Application::GetNextSurfaceTextureView()
 {
   // Get the surface texture
   SurfaceTexture surfaceTexture;
-  surface.getCurrentTexture(&surfaceTexture);
+  context.surface.getCurrentTexture(&surfaceTexture);
   if (surfaceTexture.status != SurfaceGetCurrentTextureStatus::SuccessOptimal)
   {
     return nullptr;
@@ -315,7 +168,7 @@ void Application::InitializePipeline()
   shaderDesc.nextInChain = &shaderCodeDesc.chain;
   shaderCodeDesc.code.data = shaderSource;
   shaderCodeDesc.code.length = strlen(shaderSource);
-  ShaderModule shaderModule = device.createShaderModule(shaderDesc);
+  ShaderModule shaderModule = this->context.device.createShaderModule(shaderDesc);
 
   // Create the render pipeline
   RenderPipelineDescriptor pipelineDesc;
@@ -368,7 +221,7 @@ void Application::InitializePipeline()
   blendState.alpha.operation = BlendOperation::Add;
 
   ColorTargetState colorTarget;
-  colorTarget.format = surfaceFormat;
+  colorTarget.format = context.surfaceFormat;
   colorTarget.blend = &blendState;
   colorTarget.writeMask = ColorWriteMask::All; // We could write to only some of the color channels.
 
@@ -391,7 +244,7 @@ void Application::InitializePipeline()
   pipelineDesc.multisample.alphaToCoverageEnabled = false;
   pipelineDesc.layout = nullptr;
 
-  pipeline = device.createRenderPipeline(pipelineDesc);
+  pipeline = this->context.device.createRenderPipeline(pipelineDesc);
 
   // We no longer need to access the shader module
   shaderModule.release();
