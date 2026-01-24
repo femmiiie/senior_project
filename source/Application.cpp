@@ -3,15 +3,6 @@
 // Include the C++ wrapper instead of the raw header(s)
 #include <webgpu/webgpu.hpp>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#else
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-#include <glfw3webgpu.h>
-#endif
-
 #include <iostream>
 #include <cassert>
 #include <vector>
@@ -43,118 +34,6 @@ fn fs_main() -> @location(0) vec4f {
 )";
 
 Application::Application(RenderContext &context) : context(context)
-{
-  this->InitializePipeline();
-}
-
-Application::~Application()
-{
-  pipeline.release();
-}
-
-void Application::MainLoop()
-{
-  // Get the next target texture view
-  TextureView targetView = GetNextSurfaceTextureView();
-  if (!targetView)
-    return;
-
-  // Create a command encoder for the draw call
-  CommandEncoderDescriptor encoderDesc = {};
-  encoderDesc.label = WGPU_STRING_VIEW_INIT;
-  CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(this->context.device, &encoderDesc);
-
-  // Create the render pass that clears the screen with our color
-  RenderPassDescriptor renderPassDesc = {};
-
-  // The attachment part of the render pass descriptor describes the target texture of the pass
-  RenderPassColorAttachment renderPassColorAttachment = {};
-  renderPassColorAttachment.view = targetView;
-  renderPassColorAttachment.resolveTarget = nullptr;
-  renderPassColorAttachment.loadOp = LoadOp::Clear;
-  renderPassColorAttachment.storeOp = StoreOp::Store;
-  renderPassColorAttachment.clearValue = WGPUColor{0.9, 0.1, 0.2, 1.0};
-#ifndef WEBGPU_BACKEND_WGPU
-  renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-#endif // NOT WEBGPU_BACKEND_WGPU
-
-  renderPassDesc.colorAttachmentCount = 1;
-  renderPassDesc.colorAttachments = &renderPassColorAttachment;
-  renderPassDesc.depthStencilAttachment = nullptr;
-  renderPassDesc.timestampWrites = nullptr;
-
-  RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
-
-  // Select which render pipeline to use
-  renderPass.setPipeline(pipeline);
-  // Draw 1 instance of a 3-vertices shape
-  renderPass.draw(3, 1, 0, 0);
-
-  renderPass.end();
-  renderPass.release();
-
-  // Finally encode and submit the render pass
-  CommandBufferDescriptor cmdBufferDescriptor = {};
-  cmdBufferDescriptor.label = WGPU_STRING_VIEW_INIT;
-  CommandBuffer command = encoder.finish(cmdBufferDescriptor);
-  encoder.release();
-
-  // std::cout << "Submitting command..." << std::endl;
-  context.queue.submit(1, &command);
-  command.release();
-  // std::cout << "Command submitted." << std::endl;
-
-  // At the enc of the frame
-  targetView.release();
-#ifndef __EMSCRIPTEN__
-  context.surface.present();
-#endif
-
-#if defined(WEBGPU_BACKEND_DAWN)
-  this->context.device.tick();
-#elif defined(WEBGPU_BACKEND_WGPU)
-  this->context.device.poll(false, nullptr);
-#endif
-}
-
-bool Application::IsRunning()
-{
-  return this->context.isRunning();
-}
-
-TextureView Application::GetNextSurfaceTextureView()
-{
-  // Get the surface texture
-  SurfaceTexture surfaceTexture;
-  context.surface.getCurrentTexture(&surfaceTexture);
-  if (surfaceTexture.status != SurfaceGetCurrentTextureStatus::SuccessOptimal)
-  {
-    return nullptr;
-  }
-  Texture texture = surfaceTexture.texture;
-
-  // Create a view for this surface texture
-  TextureViewDescriptor viewDescriptor;
-  viewDescriptor.label = WGPU_STRING_VIEW_INIT;
-  viewDescriptor.format = texture.getFormat();
-  viewDescriptor.dimension = TextureViewDimension::_2D;
-  viewDescriptor.baseMipLevel = 0;
-  viewDescriptor.mipLevelCount = 1;
-  viewDescriptor.baseArrayLayer = 0;
-  viewDescriptor.arrayLayerCount = 1;
-  viewDescriptor.aspect = TextureAspect::All;
-  TextureView targetView = texture.createView(viewDescriptor);
-
-#ifndef WEBGPU_BACKEND_WGPU
-  // We no longer need the texture, only its view
-  // (NB: with wgpu-native, surface textures must not be manually released)
-  Texture(surfaceTexture.texture).release();
-#endif // WEBGPU_BACKEND_WGPU
-
-  return targetView;
-}
-
-void Application::InitializePipeline()
 {
   // Load the shader module
   ShaderModuleDescriptor shaderDesc;
@@ -248,4 +127,65 @@ void Application::InitializePipeline()
 
   // We no longer need to access the shader module
   shaderModule.release();
+}
+
+Application::~Application()
+{
+  pipeline.release();
+}
+
+void Application::MainLoop()
+{
+  // Get the next target texture view
+  TextureView targetView = context.GetNextTextureView();
+  if (!targetView)
+    return;
+
+  // Create a command encoder for the draw call
+  CommandEncoderDescriptor encoderDesc = {};
+  encoderDesc.label = WGPU_STRING_VIEW_INIT;
+  CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(this->context.device, &encoderDesc);
+
+  // Create the render pass that clears the screen with our color
+  RenderPassDescriptor renderPassDesc = {};
+
+  // The attachment part of the render pass descriptor describes the target texture of the pass
+  RenderPassColorAttachment renderPassColorAttachment = {};
+  renderPassColorAttachment.view = targetView;
+  renderPassColorAttachment.resolveTarget = nullptr;
+  renderPassColorAttachment.loadOp = LoadOp::Clear;
+  renderPassColorAttachment.storeOp = StoreOp::Store;
+  renderPassColorAttachment.clearValue = WGPUColor{0.9, 0.1, 0.2, 1.0};
+#ifndef WEBGPU_BACKEND_WGPU
+  renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+#endif // NOT WEBGPU_BACKEND_WGPU
+
+  renderPassDesc.colorAttachmentCount = 1;
+  renderPassDesc.colorAttachments = &renderPassColorAttachment;
+  renderPassDesc.depthStencilAttachment = nullptr;
+  renderPassDesc.timestampWrites = nullptr;
+
+  RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
+
+  // Select which render pipeline to use
+  renderPass.setPipeline(pipeline);
+  // Draw 1 instance of a 3-vertices shape
+  renderPass.draw(3, 1, 0, 0);
+
+  renderPass.end();
+  renderPass.release();
+
+  // Finally encode and submit the render pass
+  CommandBufferDescriptor cmdBufferDescriptor = {};
+  cmdBufferDescriptor.label = WGPU_STRING_VIEW_INIT;
+  CommandBuffer command = encoder.finish(cmdBufferDescriptor);
+  encoder.release();
+
+  context.queue.submit(1, &command);
+  command.release();
+
+  targetView.release();
+  context.Present();
+
+  context.DevicePoll();
 }

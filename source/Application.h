@@ -16,12 +16,8 @@ public:
   Application(RenderContext &context);
   ~Application();
   void MainLoop();
-  bool IsRunning();
 
 private:
-  wgpu::TextureView GetNextSurfaceTextureView();
-
-  // Substep of Initialize() that creates the render pipeline
   void InitializePipeline();
 
 private:

@@ -8,8 +8,9 @@ class WebRenderContext : public RenderContext
 public:
   WebRenderContext();
 
-  // wgpu::TextureView AcquireFrame() override;
-  // void Present() override;
+  wgpu::TextureView GetNextTextureView() override;
+  void Present() override {};
+  void DevicePoll() override {};
 };
 
 #endif

@@ -11,12 +11,12 @@ public:
   GLFWRenderContext();
   ~GLFWRenderContext();
 
-  bool isRunning() override;
+  bool isRunning();
 
-  // wgpu::TextureView AcquireFrame() override;
-  // void Present() override;
+  wgpu::TextureView GetNextTextureView() override;
+  void Present() override;
+  void DevicePoll() override;
 
 private:
   GLFWwindow *window;
-  wgpu::Surface surface;
-};
+};;
