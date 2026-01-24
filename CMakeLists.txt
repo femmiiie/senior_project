@@ -106,12 +106,27 @@ else() # WGPU or DAWN backend
   endif()
 endif()
 
+# Copy shader files to output directory
+file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.wgsl")
+foreach(SHADER_FILE ${SHADER_FILES})
+  add_custom_command(TARGET ipass_webgpu POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${SHADER_FILE}"
+    "$<TARGET_FILE_DIR:ipass_webgpu>"
+    COMMENT "Copying shader file: ${SHADER_FILE}"
+  )
+endforeach()
+
 target_link_libraries(ipass_webgpu PRIVATE webgpu glfw glfw3webgpu)
 target_include_directories(ipass_webgpu PRIVATE
   ${webgpu_SOURCE_DIR}/include
   ${webgpu_headers_SOURCE_DIR}
 )
 target_compile_definitions(ipass_webgpu PRIVATE ${_backend_define})
+
+set_target_properties(ipass_webgpu PROPERTIES
+  VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:ipass_webgpu>"
+)
 
 if(EMSCRIPTEN)
   target_link_options(ipass_webgpu PRIVATE
