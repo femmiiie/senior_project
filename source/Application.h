@@ -17,10 +17,11 @@ public:
   ~Application();
   void MainLoop();
 
+  bool ok = true;
+
 private:
   void InitializePipeline();
 
-private:
   RenderContext &context;
   wgpu::RenderPipeline pipeline;
 };

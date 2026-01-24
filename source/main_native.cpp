@@ -11,6 +11,7 @@ int main()
   if (!context.ok) { return 1; }
 
   Application app(context);
+  if (!app.ok) { return 1; }
 
   while (context.isRunning())
   {
