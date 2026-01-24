@@ -2,25 +2,17 @@
 
 #include <iostream>
 
-bool GLFWRenderContext::isRunning()
-{
-  return !glfwWindowShouldClose(window);
-}
-
 GLFWRenderContext::GLFWRenderContext()
 {
-  // Open window
   if (!glfwInit())
   {
     std::cerr << "Failed to initialize GLFW!" << std::endl;
     this->ok = false;
     return;
   }
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  this->window = glfwCreateWindow(640, 480, "iPASS for WebGPU", nullptr, nullptr);
 
-  if (!window)
+  this->window = glfwCreateWindow(640, 480, "iPASS for WebGPU", nullptr, nullptr);
+  if (!this->window)
   {
     std::cerr << "Failed to create GLFW window!" << std::endl;
     glfwTerminate();
@@ -46,11 +38,11 @@ GLFWRenderContext::GLFWRenderContext()
     return;
   }
   this->surface = wgpu::Surface(rawSurface);
-  std::cout << "Created surface: " << surface << std::endl;
+  std::cout << "Created surface: " << this->surface << std::endl;
 
   std::cout << "Requesting adapter..." << std::endl;
   wgpu::RequestAdapterOptions adapterOpts = {};
-  adapterOpts.compatibleSurface = surface;
+  adapterOpts.compatibleSurface = this->surface;
   wgpu::Adapter adapter = this->instance.requestAdapter(adapterOpts);
   std::cout << "Got adapter: " << adapter << std::endl;
 
@@ -75,7 +67,7 @@ GLFWRenderContext::GLFWRenderContext()
   config.height = 480;
   config.usage = wgpu::TextureUsage::RenderAttachment;
   wgpu::SurfaceCapabilities capabilities;
-  surface.getCapabilities(adapter, &capabilities);
+  this->surface.getCapabilities(adapter, &capabilities);
   this->surfaceFormat = capabilities.formats[0];
   config.format = this->surfaceFormat;
 
@@ -86,7 +78,7 @@ GLFWRenderContext::GLFWRenderContext()
   config.presentMode = wgpu::PresentMode::Fifo;
   config.alphaMode = wgpu::CompositeAlphaMode::Auto;
 
-  surface.configure(config);
+  this->surface.configure(config);
 
   // Release the adapter and instance after configuration
   adapter.release();
@@ -95,10 +87,57 @@ GLFWRenderContext::GLFWRenderContext()
 
 GLFWRenderContext::~GLFWRenderContext()
 {
-  surface.unconfigure();
+  this->surface.unconfigure();
   queue.release();
-  surface.release();
+  this->surface.release();
   device.release();
-  glfwDestroyWindow(window);
+  glfwDestroyWindow(this->window);
   glfwTerminate();
+}
+
+bool GLFWRenderContext::isRunning()
+{
+  return !glfwWindowShouldClose(this->window);
+}
+
+wgpu::TextureView GLFWRenderContext::GetNextTextureView()
+{
+  wgpu::SurfaceTexture surfaceTexture;
+  this->surface.getCurrentTexture(&surfaceTexture);
+  if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal)
+  {
+    return nullptr;
+  }
+  wgpu::Texture texture = surfaceTexture.texture;
+
+  wgpu::TextureViewDescriptor viewDescriptor;
+  viewDescriptor.label = WGPU_STRING_VIEW_INIT;
+  viewDescriptor.format = texture.getFormat();
+  viewDescriptor.dimension = wgpu::TextureViewDimension::_2D;
+  viewDescriptor.baseMipLevel = 0;
+  viewDescriptor.mipLevelCount = 1;
+  viewDescriptor.baseArrayLayer = 0;
+  viewDescriptor.arrayLayerCount = 1;
+  viewDescriptor.aspect = wgpu::TextureAspect::All;
+  wgpu::TextureView targetView = texture.createView(viewDescriptor);
+
+#ifndef WEBGPU_BACKEND_WGPU
+  wgpu::Texture(surfaceTexture.texture).release();
+#endif
+
+  return targetView;
+}
+
+void GLFWRenderContext::Present()
+{
+  this->surface.present();
+}
+
+void GLFWRenderContext::DevicePoll()
+{
+#if defined(WEBGPU_BACKEND_DAWN)
+  this->device.tick();
+#elif defined(WEBGPU_BACKEND_WGPU)
+  this->device.poll(false, nullptr);
+#endif
 }
