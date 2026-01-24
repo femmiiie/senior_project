@@ -11,6 +11,7 @@ GLFWRenderContext::GLFWRenderContext()
     return;
   }
 
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   this->window = glfwCreateWindow(640, 480, "iPASS for WebGPU", nullptr, nullptr);
   if (!this->window)
   {
@@ -80,7 +81,6 @@ GLFWRenderContext::GLFWRenderContext()
 
   this->surface.configure(config);
 
-  // Release the adapter and instance after configuration
   adapter.release();
   this->instance.release();
 }

@@ -9,45 +9,19 @@
 #include <cstring>
 
 #include "Application.h"
+#include "ShaderLoader/ShaderLoader.h"
 
 using namespace wgpu;
 
-// We embbed the source of the shader module here
-const char *shaderSource = R"(
-@vertex
-fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-	var p = vec2f(0.0, 0.0);
-	if (in_vertex_index == 0u) {
-		p = vec2f(-0.5, -0.5);
-	} else if (in_vertex_index == 1u) {
-		p = vec2f(0.5, -0.5);
-	} else {
-		p = vec2f(0.0, 0.5);
-	}
-	return vec4f(p, 0.0, 1.0);
-}
-
-@fragment
-fn fs_main() -> @location(0) vec4f {
-	return vec4f(0.0, 0.4, 1.0, 1.0);
-}
-)";
-
 Application::Application(RenderContext &context) : context(context)
 {
-  // Load the shader module
-  ShaderModuleDescriptor shaderDesc;
-
-  // We use the extension mechanism to specify the WGSL part of the shader module descriptor
-  ShaderSourceWGSL shaderCodeDesc;
-  // Set the chained struct's header
-  shaderCodeDesc.chain.next = nullptr;
-  shaderCodeDesc.chain.sType = SType::ShaderSourceWGSL;
-  // Connect the chain
-  shaderDesc.nextInChain = &shaderCodeDesc.chain;
-  shaderCodeDesc.code.data = shaderSource;
-  shaderCodeDesc.code.length = strlen(shaderSource);
-  ShaderModule shaderModule = this->context.device.createShaderModule(shaderDesc);
+  //Need to update CMake so that shader files get copied next to the executable
+  wgpu::ShaderModule shaderModule = LoadShader(this->context.device, "shader.wgsl");
+  if (!shaderModule)
+  {
+    this->ok = false;
+    return;
+  }
 
   // Create the render pipeline
   RenderPipelineDescriptor pipelineDesc;
