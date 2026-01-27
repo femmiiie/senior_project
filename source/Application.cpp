@@ -10,7 +10,6 @@
 
 Application::Application(RenderContext &context) : context(context)
 {
-  // Need to update CMake so that shader files get copied next to the executable
   wgpu::ShaderModule shaderModule = LoadShader(this->context.device, "shader.wgsl");
   if (!shaderModule)
   {
@@ -19,7 +18,6 @@ Application::Application(RenderContext &context) : context(context)
   }
 
   // Create the render pipeline
-  // wgpu::RenderPipeline
   wgpu::RenderPipelineDescriptor pipelineDesc;
 
   // We do not use any vertex buffer for this first simplistic example
