@@ -1,8 +1,5 @@
 // THIS IS A MODIFIED VERSION OF https://eliemichel.github.io/LearnWebGPU/basic-3d-rendering/hello-triangle.html FOR TESTING WORKING BUILD
 
-// Include the C++ wrapper instead of the raw header(s)
-#include <webgpu/webgpu.hpp>
-
 #include <iostream>
 #include <cassert>
 #include <vector>
@@ -11,11 +8,9 @@
 #include "Application.h"
 #include "ShaderLoader/ShaderLoader.h"
 
-using namespace wgpu;
-
 Application::Application(RenderContext &context) : context(context)
 {
-  //Need to update CMake so that shader files get copied next to the executable
+  // Need to update CMake so that shader files get copied next to the executable
   wgpu::ShaderModule shaderModule = LoadShader(this->context.device, "shader.wgsl");
   if (!shaderModule)
   {
@@ -24,7 +19,8 @@ Application::Application(RenderContext &context) : context(context)
   }
 
   // Create the render pipeline
-  RenderPipelineDescriptor pipelineDesc;
+  // wgpu::RenderPipeline
+  wgpu::RenderPipelineDescriptor pipelineDesc;
 
   // We do not use any vertex buffer for this first simplistic example
   pipelineDesc.vertex.bufferCount = 0;
@@ -34,54 +30,65 @@ Application::Application(RenderContext &context) : context(context)
   // Here we tell that the programmable vertex shader stage is described
   // by the function called 'vs_main' in that module.
   pipelineDesc.vertex.module = shaderModule;
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN
+  pipelineDesc.vertex.entryPoint = "vs_main";
+#else
   pipelineDesc.vertex.entryPoint.data = "vs_main";
   pipelineDesc.vertex.entryPoint.length = strlen("vs_main");
+#endif
   pipelineDesc.vertex.constantCount = 0;
   pipelineDesc.vertex.constants = nullptr;
 
   // Each sequence of 3 vertices is considered as a triangle
-  pipelineDesc.primitive.topology = PrimitiveTopology::TriangleList;
+
+  pipelineDesc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
 
   // We'll see later how to specify the order in which vertices should be
   // connected. When not specified, vertices are considered sequentially.
-  pipelineDesc.primitive.stripIndexFormat = IndexFormat::Undefined;
+  pipelineDesc.primitive.stripIndexFormat = wgpu::IndexFormat::Undefined;
 
   // The face orientation is defined by assuming that when looking
   // from the front of the face, its corner vertices are enumerated
   // in the counter-clockwise (CCW) order.
-  pipelineDesc.primitive.frontFace = FrontFace::CCW;
+  pipelineDesc.primitive.frontFace = wgpu::FrontFace::CCW;
 
   // But the face orientation does not matter much because we do not
   // cull (i.e. "hide") the faces pointing away from us (which is often
   // used for optimization).
-  pipelineDesc.primitive.cullMode = CullMode::None;
+  pipelineDesc.primitive.cullMode = wgpu::CullMode::None;
+
+  wgpu::BlendState blendState;
+  blendState.color.srcFactor = wgpu::BlendFactor::SrcAlpha;
+  blendState.color.dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha;
+  blendState.color.operation = wgpu::BlendOperation::Add;
+  blendState.alpha.srcFactor = wgpu::BlendFactor::Zero;
+  blendState.alpha.dstFactor = wgpu::BlendFactor::One;
+  blendState.alpha.operation = wgpu::BlendOperation::Add;
+
+  wgpu::ColorTargetState colorTarget;
+  colorTarget.format = context.surfaceFormat;
+  colorTarget.blend = &blendState;
+  colorTarget.writeMask = wgpu::ColorWriteMask::All; // We could write to only some of the color channels.
 
   // We tell that the programmable fragment shader stage is described
   // by the function called 'fs_main' in the shader module.
-  FragmentState fragmentState;
+
+  wgpu::FragmentState fragmentState;
   fragmentState.module = shaderModule;
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN
+  fragmentState.entryPoint = "fs_main";
+#else
   fragmentState.entryPoint.data = "fs_main";
   fragmentState.entryPoint.length = strlen("fs_main");
+#endif
   fragmentState.constantCount = 0;
   fragmentState.constants = nullptr;
-
-  BlendState blendState;
-  blendState.color.srcFactor = BlendFactor::SrcAlpha;
-  blendState.color.dstFactor = BlendFactor::OneMinusSrcAlpha;
-  blendState.color.operation = BlendOperation::Add;
-  blendState.alpha.srcFactor = BlendFactor::Zero;
-  blendState.alpha.dstFactor = BlendFactor::One;
-  blendState.alpha.operation = BlendOperation::Add;
-
-  ColorTargetState colorTarget;
-  colorTarget.format = context.surfaceFormat;
-  colorTarget.blend = &blendState;
-  colorTarget.writeMask = ColorWriteMask::All; // We could write to only some of the color channels.
 
   // We have only one target because our render pass has only one output color
   // attachment.
   fragmentState.targetCount = 1;
   fragmentState.targets = &colorTarget;
+
   pipelineDesc.fragment = &fragmentState;
 
   // We do not use stencil/depth testing for now
@@ -111,24 +118,28 @@ Application::~Application()
 void Application::MainLoop()
 {
   // Get the next target texture view
-  TextureView targetView = context.GetNextTextureView();
+  wgpu::TextureView targetView = context.GetNextTextureView();
   if (!targetView)
     return;
 
   // Create a command encoder for the draw call
-  CommandEncoderDescriptor encoderDesc = {};
+  wgpu::CommandEncoderDescriptor encoderDesc = {};
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN // haven't thought of a nice way of doing this yet
+  encoderDesc.label = nullptr;
+#else
   encoderDesc.label = WGPU_STRING_VIEW_INIT;
-  CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(this->context.device, &encoderDesc);
+#endif
+  wgpu::CommandEncoder encoder = wgpuDeviceCreateCommandEncoder(this->context.device, &encoderDesc);
 
   // Create the render pass that clears the screen with our color
-  RenderPassDescriptor renderPassDesc = {};
+  wgpu::RenderPassDescriptor renderPassDesc = {};
 
   // The attachment part of the render pass descriptor describes the target texture of the pass
-  RenderPassColorAttachment renderPassColorAttachment = {};
+  wgpu::RenderPassColorAttachment renderPassColorAttachment = {};
   renderPassColorAttachment.view = targetView;
   renderPassColorAttachment.resolveTarget = nullptr;
-  renderPassColorAttachment.loadOp = LoadOp::Clear;
-  renderPassColorAttachment.storeOp = StoreOp::Store;
+  renderPassColorAttachment.loadOp = wgpu::LoadOp::Clear;
+  renderPassColorAttachment.storeOp = wgpu::StoreOp::Store;
   renderPassColorAttachment.clearValue = WGPUColor{0.9, 0.1, 0.2, 1.0};
 #ifndef WEBGPU_BACKEND_WGPU
   renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
@@ -139,7 +150,7 @@ void Application::MainLoop()
   renderPassDesc.depthStencilAttachment = nullptr;
   renderPassDesc.timestampWrites = nullptr;
 
-  RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
+  wgpu::RenderPassEncoder renderPass = encoder.beginRenderPass(renderPassDesc);
 
   // Select which render pipeline to use
   renderPass.setPipeline(pipeline);
@@ -150,9 +161,13 @@ void Application::MainLoop()
   renderPass.release();
 
   // Finally encode and submit the render pass
-  CommandBufferDescriptor cmdBufferDescriptor = {};
+  wgpu::CommandBufferDescriptor cmdBufferDescriptor = {};
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN // haven't thought of a nice way of doing this yet
+  cmdBufferDescriptor.label = nullptr;
+#else
   cmdBufferDescriptor.label = WGPU_STRING_VIEW_INIT;
-  CommandBuffer command = encoder.finish(cmdBufferDescriptor);
+#endif
+  wgpu::CommandBuffer command = encoder.finish(cmdBufferDescriptor);
   encoder.release();
 
   context.queue.submit(1, &command);
