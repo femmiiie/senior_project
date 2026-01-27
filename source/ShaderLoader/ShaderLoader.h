@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-wgpu::ShaderModule LoadShader(wgpu::Device& device, std::string filepath)
+wgpu::ShaderModule LoadShader(wgpu::Device &device, std::string filepath)
 {
   std::ifstream fs(filepath);
 
@@ -19,20 +19,24 @@ wgpu::ShaderModule LoadShader(wgpu::Device& device, std::string filepath)
   ss << fs.rdbuf();
   std::string shaderSource = ss.str();
 
-  std::cout << shaderSource << std::endl;
-
-  // Load the shader module
   wgpu::ShaderModuleDescriptor shaderDesc;
 
-  // We use the extension mechanism to specify the WGSL part of the shader module descriptor
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN // need to come up with something for this
+  wgpu::ShaderModuleWGSLDescriptor wgslDesc;
+  wgslDesc.chain.next = nullptr;
+  wgslDesc.chain.sType = wgpu::SType::ShaderModuleWGSLDescriptor;
+  wgslDesc.code = shaderSource.c_str();
+  shaderDesc.nextInChain = &wgslDesc.chain;
+#else
   wgpu::ShaderSourceWGSL shaderCodeDesc;
-  // Set the chained struct's header
+
   shaderCodeDesc.chain.next = nullptr;
   shaderCodeDesc.chain.sType = wgpu::SType::ShaderSourceWGSL;
-  // Connect the chain
+
   shaderDesc.nextInChain = &shaderCodeDesc.chain;
   shaderCodeDesc.code.data = shaderSource.c_str();
   shaderCodeDesc.code.length = shaderSource.length();
-  
+#endif
+
   return device.createShaderModule(shaderDesc);
 }
