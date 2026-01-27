@@ -23,14 +23,16 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 )
 
 # Remove both main files from the sources list
-list(FILTER SOURCES EXCLUDE REGEX ".*/main_native\\.cpp$")
-list(FILTER SOURCES EXCLUDE REGEX ".*/main_wasm\\.cpp$")
 
 # Add the appropriate main file based on target platform
 if(EMSCRIPTEN)
-  list(APPEND SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/source/main_wasm.cpp")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/main_native\\.cpp$")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/RenderContext/GLFWRenderContext/GLFWRenderContext\\.cpp$")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/RenderContext/GLFWRenderContext/GLFWRenderContext\\.h$")
 else()
-  list(APPEND SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/source/main_native.cpp")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/main_wasm\\.cpp$")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/RenderContext/WebRenderContext/WebRenderContext\\.cpp$")
+  list(FILTER SOURCES EXCLUDE REGEX ".*/RenderContext/WebRenderContext/WebRenderContext\\.h$")
 endif()
 
 add_executable(ipass_webgpu ${SOURCES})
@@ -108,6 +110,7 @@ endif()
 
 # Copy shader files to output directory
 file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.wgsl")
+
 foreach(SHADER_FILE ${SHADER_FILES})
   add_custom_command(TARGET ipass_webgpu POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -129,10 +132,19 @@ set_target_properties(ipass_webgpu PROPERTIES
 )
 
 if(EMSCRIPTEN)
+  # Build preload options for all shader files
+  set(PRELOAD_OPTIONS "")
+
+  foreach(SHADER_FILE ${SHADER_FILES})
+    get_filename_component(SHADER_NAME ${SHADER_FILE} NAME)
+    list(APPEND PRELOAD_OPTIONS "--preload-file=${SHADER_FILE}@${SHADER_NAME}")
+  endforeach()
+
   target_link_options(ipass_webgpu PRIVATE
     "-sUSE_WEBGPU=1"
     "-sUSE_GLFW=3"
     "-sASYNCIFY"
+    ${PRELOAD_OPTIONS}
   )
   set_target_properties(ipass_webgpu PROPERTIES SUFFIX ".html")
 endif()
