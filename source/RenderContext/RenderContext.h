@@ -14,8 +14,6 @@ struct RenderContext
   wgpu::Surface surface;
   wgpu::TextureFormat surfaceFormat;
 
-  bool ok = true;
-
   void Initialize();
   void ConfigureSurface();
 
