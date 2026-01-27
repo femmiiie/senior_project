@@ -5,13 +5,14 @@
 #include "RenderContext/GLFWRenderContext/GLFWRenderContext.h"
 
 int main()
-{ 
+{
   GLFWRenderContext context = GLFWRenderContext();
 
-  if (!context.ok) { return 1; }
-
   Application app(context);
-  if (!app.ok) { return 1; }
+  if (!app.ok)
+  {
+    return 1;
+  }
 
   while (context.isRunning())
   {
