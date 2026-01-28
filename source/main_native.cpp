@@ -1,6 +1,8 @@
 #define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
 
+#include <nuklear.h>
+
 #include "Application.h"
 #include "RenderContext/GLFWRenderContext/GLFWRenderContext.h"
 

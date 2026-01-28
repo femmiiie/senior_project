@@ -11,6 +11,12 @@ FetchContent_Declare(webgpu
   GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution
   GIT_TAG main
 )
+
+FetchContent_Declare(nuklear
+  GIT_REPOSITORY https://github.com/Immediate-Mode-UI/Nuklear
+  GIT_TAG
+)
+
 FetchContent_Declare(glfw3webgpu
   GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu
   GIT_TAG main
@@ -69,7 +75,7 @@ if(EMSCRIPTEN) # Building for WASM is still kinda broken, need to fix
     target_link_options(glfw INTERFACE "-sUSE_GLFW=3")
   endif()
 
-  FetchContent_MakeAvailable(webgpu glfw3webgpu)
+  FetchContent_MakeAvailable(webgpu nuklear)
   set(_backend_define WEBGPU_BACKEND_EMSCRIPTEN)
 
 else() # WGPU or DAWN backend
@@ -89,7 +95,7 @@ else() # WGPU or DAWN backend
   set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set(GLFW3WEBGPU_BACKEND ${BACKEND} CACHE STRING "" FORCE)
 
-  FetchContent_MakeAvailable(webgpu glfw glfw3webgpu)
+  FetchContent_MakeAvailable(webgpu nuklear glfw glfw3webgpu)
 
   if(WIN32)
     target_compile_definitions(glfw3webgpu PRIVATE GLFW_EXPOSE_NATIVE_WIN32)
@@ -108,6 +114,40 @@ else() # WGPU or DAWN backend
   endif()
 endif()
 
+# ------------------------------------------
+# Nuklear Config
+# ------------------------------------------
+add_library(nuklear INTERFACE)
+target_include_directories(nuklear SYSTEM INTERFACE
+  ${nuklear_SOURCE_DIR}
+)
+
+target_sources(ipass_webgpu PRIVATE
+  source/nuklear_impl.cpp
+)
+
+if(MSVC)
+  set_source_files_properties(
+    source/nuklear_impl.cpp
+    PROPERTIES
+    COMPILE_OPTIONS
+    "$<$<CXX_COMPILER_ID:MSVC>:/w>$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>"
+  )
+else()
+  set_source_files_properties(
+    source/nuklear_impl.cpp
+    PROPERTIES
+    COMPILE_OPTIONS "-w"
+  )
+endif()
+
+if(EMSCRIPTEN)
+  target_compile_definitions(ipass_webgpu PRIVATE
+    NK_NO_STANDARD_FILE
+    NK_NO_POSIX
+  )
+endif()
+
 # Copy shader files to output directory
 file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.wgsl")
 
@@ -120,7 +160,7 @@ foreach(SHADER_FILE ${SHADER_FILES})
   )
 endforeach()
 
-target_link_libraries(ipass_webgpu PRIVATE webgpu glfw glfw3webgpu)
+target_link_libraries(ipass_webgpu PRIVATE webgpu glfw glfw3webgpu nuklear)
 target_include_directories(ipass_webgpu PRIVATE
   ${webgpu_SOURCE_DIR}/include
   ${webgpu_headers_SOURCE_DIR}
