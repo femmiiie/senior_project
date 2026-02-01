@@ -78,6 +78,21 @@ void GLFWRenderContext::GetSurfaceFormat()
   this->surfaceFormat = capabilities.formats[0];
 }
 
+wgpu::ShaderModule GLFWRenderContext::CreateShaderModuleFromSource(std::string &shaderSource)
+{
+  wgpu::ShaderModuleDescriptor shaderDesc;
+  wgpu::ShaderSourceWGSL shaderCodeDesc;
+
+  shaderCodeDesc.chain.next = nullptr;
+  shaderCodeDesc.chain.sType = wgpu::SType::ShaderSourceWGSL;
+
+  shaderDesc.nextInChain = &shaderCodeDesc.chain;
+  shaderCodeDesc.code.data = shaderSource.c_str();
+  shaderCodeDesc.code.length = shaderSource.length();
+
+  return this->device.createShaderModule(shaderDesc);
+}
+
 void GLFWRenderContext::Present()
 {
   this->surface.present();

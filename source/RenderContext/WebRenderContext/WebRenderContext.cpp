@@ -55,3 +55,15 @@ void WebRenderContext::GetSurfaceFormat()
 {
   this->surfaceFormat = wgpu::TextureFormat::BGRA8Unorm;
 }
+
+wgpu::ShaderModule WebRenderContext::CreateShaderModuleFromSource(std::string &shaderSource)
+{
+  wgpu::ShaderModuleDescriptor shaderDesc;
+  wgpu::ShaderModuleWGSLDescriptor wgslDesc;
+  wgslDesc.chain.next = nullptr;
+  wgslDesc.chain.sType = wgpu::SType::ShaderModuleWGSLDescriptor;
+  wgslDesc.code = shaderSource.c_str();
+  shaderDesc.nextInChain = &wgslDesc.chain;
+
+  return this->device.createShaderModule(shaderDesc);
+}

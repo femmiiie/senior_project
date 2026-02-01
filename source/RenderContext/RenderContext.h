@@ -17,8 +17,11 @@ struct RenderContext
   void Initialize();
   void ConfigureSurface();
 
+  wgpu::ShaderModule LoadShader(std::string filepath);
+
   virtual void GenerateSurface() = 0;
   virtual void GetSurfaceFormat() = 0;
+  virtual wgpu::ShaderModule CreateShaderModuleFromSource(std::string &shaderSource) = 0;
 
   virtual wgpu::TextureView GetNextTextureView() = 0;
   virtual void Present() = 0;
@@ -34,7 +37,7 @@ private:
 
 public:
   RenderContextException(std::string m) : message(m) {}
-  RenderContextException(const char m) { this->message = m; }
+  RenderContextException(const char *m) { this->message = m; }
   const char *what() const noexcept override { return this->message.c_str(); }
 };
 

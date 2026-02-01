@@ -15,6 +15,7 @@ public:
 
   void GenerateSurface() override;
   void GetSurfaceFormat() override;
+  wgpu::ShaderModule CreateShaderModuleFromSource(std::string &shaderSource) override;
 
   wgpu::TextureView GetNextTextureView() override;
   void Present() override;
