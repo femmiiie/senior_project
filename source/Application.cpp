@@ -6,11 +6,10 @@
 #include <cstring>
 
 #include "Application.h"
-#include "ShaderLoader/ShaderLoader.h"
 
 Application::Application(RenderContext &context) : context(context)
 {
-  wgpu::ShaderModule shaderModule = LoadShader(this->context.device, "shader.wgsl");
+  wgpu::ShaderModule shaderModule = context.LoadShader("shader.wgsl");
   if (!shaderModule)
   {
     this->ok = false;

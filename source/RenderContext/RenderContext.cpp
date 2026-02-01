@@ -1,5 +1,8 @@
 #include "RenderContext.h"
 
+#include <fstream>
+#include <sstream>
+
 RenderContext::~RenderContext()
 {
   this->surface.unconfigure();
@@ -61,4 +64,21 @@ void RenderContext::ConfigureSurface()
   this->surface.configure(surfConfig);
 
   this->queue = this->device.getQueue();
+}
+
+wgpu::ShaderModule RenderContext::LoadShader(std::string filepath)
+{
+  std::ifstream fs(filepath);
+
+  if (!fs.is_open())
+  {
+    std::cout << "Failed to open file " << filepath << std::endl;
+    return nullptr;
+  }
+
+  std::ostringstream ss;
+  ss << fs.rdbuf();
+  std::string shaderSource = ss.str();
+
+  return this->CreateShaderModuleFromSource(shaderSource);
 }
