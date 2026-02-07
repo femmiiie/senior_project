@@ -15,6 +15,10 @@ FetchContent_Declare(glfw3webgpu
   GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu
   GIT_TAG main
 )
+FetchContent_Declare(glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
+)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/source/shaders/*.wgsl"
@@ -89,7 +93,7 @@ else() # WGPU or DAWN backend
   set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   set(GLFW3WEBGPU_BACKEND ${BACKEND} CACHE STRING "" FORCE)
 
-  FetchContent_MakeAvailable(webgpu glfw glfw3webgpu)
+  FetchContent_MakeAvailable(webgpu glfw glfw3webgpu glm)
 
   if(WIN32)
     target_compile_definitions(glfw3webgpu PRIVATE GLFW_EXPOSE_NATIVE_WIN32)
@@ -120,7 +124,7 @@ foreach(SHADER_FILE ${SHADER_FILES})
   )
 endforeach()
 
-target_link_libraries(ipass_webgpu PRIVATE webgpu glfw glfw3webgpu)
+target_link_libraries(ipass_webgpu PRIVATE webgpu glfw glfw3webgpu glm::glm)
 target_include_directories(ipass_webgpu PRIVATE
   ${webgpu_SOURCE_DIR}/include
   ${webgpu_headers_SOURCE_DIR}
