@@ -9,14 +9,13 @@
 #include <cstring>
 #include <array>
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+
 #include "../RenderContext/RenderContext.h"
 #include "../Utils/Utils.h"
-
-typedef std::array<float_t, 2> vec2f;
-typedef std::array<float_t, 3> vec3f;
-typedef std::array<float_t, 4> vec4f;
-typedef std::array<float_t, 16> mat4f;
-
 
 class Renderer
 {
@@ -28,16 +27,16 @@ public:
 private:
   struct LightData
   {
-    vec4f position;
-    vec4f color;
-    float_t power;
+    glm::vec4 position;
+    glm::vec4 color;
+    glm::f32 power;
   };
 
   struct MVP
   {
-    mat4f M;
-    mat4f V;
-    mat4f P;
+    glm::mat4 M;
+    glm::mat4 V;
+    glm::mat4 P;
   };
 
   LightData light;
