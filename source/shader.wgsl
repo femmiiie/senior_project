@@ -1,17 +1,66 @@
-@vertex
-fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-	var p = vec2f(0.0, 0.0);
-	if (in_vertex_index == 0u) {
-		p = vec2f(-0.5, -0.5);
-	} else if (in_vertex_index == 1u) {
-		p = vec2f(0.5, -0.5);
-	} else {
-		p = vec2f(0.0, 0.5);
-	}
-	return vec4f(p, 0.0, 1.0);
+struct vsInput {
+  @location(0) position: vec4f,
+  @location(1) normal: vec4f,
+  @location(2) color: vec4f,
+  @location(3) tex: vec2f
 }
 
+struct fsInput {
+  @builtin(position) position: vec4f,
+  @location(0) normal: vec4f,
+  @location(1) color: vec4f,
+  @location(2) tex: vec2f,
+  @location(3) eyevector: vec4f
+}
+
+struct MVP {
+  M: mat4x4f,
+  V: mat4x4f,
+  P: mat4x4f
+}
+
+struct lightData {
+  position: vec4f,
+  color: vec4f,
+  power: f32
+}
+
+@group(0) @binding(0) var<uniform> mvp: MVP;
+@group(0) @binding(1) var<uniform> light: lightData;
+
+@vertex
+fn vs_main(input: vsInput) -> fsInput {
+  var output: fsInput;
+
+  output.position = mvp.M * input.position;
+  output.normal = mvp.V * mvp.M * input.normal;
+  output.color = input.color;
+  output.tex = input.tex;
+  output.eyevector = vec4f(0) - (mvp.V * mvp.M * input.position);
+
+  return output;
+}
+
+
+
 @fragment
-fn fs_main() -> @location(0) vec4f {
-	return vec4f(0.0, 0.4, 1.0, 1.0);
+fn fs_main(input: fsInput) -> @location(0) vec4f {
+  let spec_color: vec4f = 0.1 * input.color;
+  let light_direction: vec4f = normalize(light.position - input.position);
+  let light_distance: f32 = length(light.position - input.position);
+
+//diffuse
+  let n: vec4f = normalize(input.normal);
+  let l: vec4f = normalize(light_direction);
+  let diffuse: vec4f = input.color * light.color * light.power * clamp(dot(n, l), 0.0, 1.0) / pow(light_distance, 2.0);
+
+//ambient
+  let ambient: vec4f = 0.1 * input.color;
+
+//specular
+  let e: vec4f = normalize(input.eyevector);
+  let r: vec4f = reflect(-l, n);
+  let specular: vec4f = spec_color * light.color * light.power * pow(clamp(dot(e, r), 0.0, 1.0), 10.0) / pow(light_distance, 2.0);
+
+  return clamp(diffuse + ambient + specular, vec4f(0), vec4f(1));
 }

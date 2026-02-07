@@ -21,6 +21,8 @@ struct RenderContext
 
   virtual void GenerateSurface() = 0;
   virtual void GetSurfaceFormat() = 0;
+  virtual void SetEntryPoint(WGPUStringView &entryPoint, const char* name) = 0;
+  virtual void InitLabel(WGPUStringView &label) = 0;
   virtual wgpu::ShaderModule CreateShaderModuleFromSource(std::string &shaderSource) = 0;
 
   virtual wgpu::TextureView GetNextTextureView() = 0;
