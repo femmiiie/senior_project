@@ -7,26 +7,38 @@
 
 Renderer::Renderer(RenderContext &context) : context(context)
 {
-  std::vector<float_t> data {
-    0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0,  1.0, 0.0, 0.0, 0.0,  0.0, 0.0,
-    0.5, 0.5, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0,  0.0, 1.0, 0.0, 0.0,  0.0, 0.0,
-    1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 1.0, 0.0,  0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  std::vector<glm::f32> data {//basic test triangle
+    // position          normal               color                tex
+    0.0, 0.0, 0.0, 1.0,  0.0, 0.0, 1.0, 0.0,  1.0, 0.0, 0.0, 1.0,  0.0, 0.0,
+    0.5, 0.5, 0.0, 1.0,  0.0, 0.0, 1.0, 0.0,  0.0, 1.0, 0.0, 1.0,  0.0, 0.0,
+    1.0, 0.0, 0.0, 1.0,  0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 1.0, 1.0,  0.0, 0.0,
   };
-  this->vertexCount = (uint32_t)data.size() / 14;
+  this->vertexCount = (glm::u32)data.size() / 14;
 
   this->vertexBuffer = this->CreateBuffer(
-    data.size() * sizeof(float_t),
+    data.size() * sizeof(glm::f32),
     wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
     false
   );
 
-  this->context.queue.writeBuffer(this->vertexBuffer, 0, data.data(), data.size() * sizeof(float_t));
+  this->context.queue.writeBuffer(this->vertexBuffer, 0, data.data(), data.size() * sizeof(glm::f32));
 
+  this->mvp.M = glm::mat4(1);
 
+  this->mvp.V = glm::lookAt(
+    glm::vec3(0, 0, -1),
+    glm::vec3(0),
+    glm::vec3(0, 1, 0)
+  );
+
+  this->mvp.P = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+
+  this->light.position = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+  this->light.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+  this->light.power = 20.0f;
 
   std::vector<wgpu::BindGroupLayoutEntry> bindingLayouts {
-    this->CreateBindingLayout(0, wgpu::ShaderStage::Vertex, utils::aligned_size(this->mvp)),
+    this->CreateBindingLayout(0, wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment, utils::aligned_size(this->mvp)),
     this->CreateBindingLayout(1, wgpu::ShaderStage::Fragment, utils::aligned_size(this->light)),
   };
   this->bindGroupLayout = this->CreateBindGroupLayout(bindingLayouts);
@@ -36,6 +48,9 @@ Renderer::Renderer(RenderContext &context) : context(context)
     this->CreateBinding(1, this->lightBuffer, utils::aligned_size(this->light))
   };
   this->bindGroup = this->CreateBindGroup(bindings);
+
+  this->context.queue.writeBuffer(this->mvpBuffer, 0, &this->mvp, sizeof(MVP));
+  this->context.queue.writeBuffer(this->lightBuffer, 0, &this->light, sizeof(LightData));
   
   this->InitializeRenderPipeline();
 }
@@ -128,7 +143,7 @@ wgpu::BindGroupLayout Renderer::CreateBindGroupLayout(std::vector<wgpu::BindGrou
   return this->context.device.createBindGroupLayout(desc);
 }
 
-wgpu::BindGroupEntry Renderer::CreateBinding(uint16_t entry, wgpu::Buffer& buffer, uint32_t size)
+wgpu::BindGroupEntry Renderer::CreateBinding(uint16_t entry, wgpu::Buffer& buffer, glm::u32 size)
 {
   buffer = this->CreateBuffer(
     size,
@@ -153,7 +168,7 @@ wgpu::BindGroup Renderer::CreateBindGroup(std::vector<wgpu::BindGroupEntry>& bin
   return this->context.device.createBindGroup(desc);
 }
 
-wgpu::VertexAttribute Renderer::CreateAttribute(uint32_t location, wgpu::VertexFormat format, uint64_t offset)
+wgpu::VertexAttribute Renderer::CreateAttribute(glm::u32 location, wgpu::VertexFormat format, uint64_t offset)
 {
   wgpu::VertexAttribute attr;
   attr.shaderLocation = location;
@@ -192,16 +207,16 @@ void Renderer::InitializeRenderPipeline()
   pipelineDesc.layout = this->layout;
 
   std::vector<wgpu::VertexAttribute> vertexAttrs {
-    this->CreateAttribute(0, wgpu::VertexFormat::Float32x4),
-    this->CreateAttribute(1, wgpu::VertexFormat::Float32x4),
-    this->CreateAttribute(2, wgpu::VertexFormat::Float32x4),
-    this->CreateAttribute(3, wgpu::VertexFormat::Float32x2),
+    this->CreateAttribute(0, wgpu::VertexFormat::Float32x4, 0),
+    this->CreateAttribute(1, wgpu::VertexFormat::Float32x4, 4 * sizeof(glm::f32)),
+    this->CreateAttribute(2, wgpu::VertexFormat::Float32x4, 8 * sizeof(glm::f32)),
+    this->CreateAttribute(3, wgpu::VertexFormat::Float32x2, 12 * sizeof(glm::f32)),
   };
 
   wgpu::VertexBufferLayout vertexBufferLayout;
   vertexBufferLayout.attributeCount = vertexAttrs.size();
   vertexBufferLayout.attributes = vertexAttrs.data();
-  vertexBufferLayout.arrayStride = 14 * sizeof(float_t);
+  vertexBufferLayout.arrayStride = 14 * sizeof(glm::f32);
   vertexBufferLayout.stepMode = wgpu::VertexStepMode::Vertex;
 
   pipelineDesc.vertex.bufferCount = 1;
