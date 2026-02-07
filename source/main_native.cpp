@@ -1,24 +1,19 @@
 #define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
 
-#include "Application.h"
 #include "RenderContext/GLFWRenderContext/GLFWRenderContext.h"
+#include "Renderer/Renderer.h"
 
 int main()
 {
-  GLFWRenderContext context = GLFWRenderContext();
+	GLFWRenderContext context = GLFWRenderContext();
+	Renderer renderer(context);
 
-  Application app(context);
-  if (!app.ok)
-  {
-    return 1;
-  }
+	while (context.isRunning())
+	{
+		glfwPollEvents();
+		renderer.MainLoop();
+	}
 
-  while (context.isRunning())
-  {
-    glfwPollEvents();
-    app.MainLoop();
-  }
-
-  return 0;
+	return 0;
 }

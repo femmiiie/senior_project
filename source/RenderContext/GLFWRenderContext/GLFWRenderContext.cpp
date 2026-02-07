@@ -1,6 +1,7 @@
 #include "GLFWRenderContext.h"
 
 #include <iostream>
+#include <cstring>
 
 GLFWRenderContext::GLFWRenderContext()
 {
@@ -105,4 +106,10 @@ void GLFWRenderContext::DevicePoll()
 #else
   this->device.poll(false, nullptr);
 #endif
+}
+
+void GLFWRenderContext::SetEntryPoint(WGPUStringView &entryPoint, const char* name)
+{
+  entryPoint.data = name;
+  entryPoint.length = strlen(name);
 }
