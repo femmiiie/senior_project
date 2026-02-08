@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 
-GLFWRenderContext::GLFWRenderContext()
+GLFWRenderContext::GLFWRenderContext(glm::vec2 size) : RenderContext(size)
 {
   if (!glfwInit())
   {
@@ -11,7 +11,7 @@ GLFWRenderContext::GLFWRenderContext()
   }
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  this->window = glfwCreateWindow(640, 480, "iPASS for WebGPU", nullptr, nullptr);
+  this->window = glfwCreateWindow(this->screenSize.x, this->screenSize.y, "iPASS for WebGPU", nullptr, nullptr);
   if (!this->window)
   {
     glfwTerminate();
