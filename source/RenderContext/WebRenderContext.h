@@ -1,7 +1,7 @@
 #ifndef WEBRENDERCONTEXT
 #define WEBRENDERCONTEXT
 
-#include "../RenderContext.h"
+#include "RenderContext.h"
 
 class WebRenderContext : public RenderContext
 {

@@ -1,4 +1,4 @@
-#include "../RenderContext.h"
+#include "RenderContext.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
@@ -8,10 +8,11 @@
 class GLFWRenderContext final : public RenderContext
 {
 public:
-  GLFWRenderContext();
+  GLFWRenderContext(glm::vec2 size);
   ~GLFWRenderContext();
 
   bool isRunning();
+  GLFWwindow* getWindow() { return window; }
 
   void GenerateSurface() override;
   void GetSurfaceFormat() override;
