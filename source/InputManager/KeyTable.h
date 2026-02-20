@@ -1,0 +1,42 @@
+#include <map>
+#include <nuklear.h>
+#include <GLFW/glfw3.h>
+
+//These are just to make it easy to convert between GLFW key instances and Nuklear ones
+
+static std::map<int, nk_keys> keyTable
+{
+  {GLFW_KEY_DELETE, NK_KEY_DEL},
+  {GLFW_KEY_ENTER, NK_KEY_ENTER},
+  {GLFW_KEY_TAB, NK_KEY_TAB},
+  {GLFW_KEY_BACKSPACE, NK_KEY_BACKSPACE},
+  {GLFW_KEY_UP, NK_KEY_UP},
+  {GLFW_KEY_DOWN, NK_KEY_DOWN},
+  {GLFW_KEY_LEFT, NK_KEY_LEFT},
+  {GLFW_KEY_RIGHT, NK_KEY_RIGHT},
+  {GLFW_KEY_HOME, NK_KEY_TEXT_LINE_START},
+  {GLFW_KEY_END, NK_KEY_TEXT_LINE_END},
+  {GLFW_KEY_PAGE_DOWN, NK_KEY_SCROLL_DOWN},
+  {GLFW_KEY_PAGE_UP, NK_KEY_SCROLL_UP},
+  {GLFW_KEY_LEFT_SHIFT, NK_KEY_SHIFT},
+  {GLFW_KEY_RIGHT_SHIFT, NK_KEY_SHIFT},
+  {GLFW_KEY_LEFT_CONTROL, NK_KEY_CTRL},
+  {GLFW_KEY_RIGHT_CONTROL, NK_KEY_CTRL},
+};
+
+static std::map<int, nk_buttons> mouseTable
+{
+  {GLFW_MOUSE_BUTTON_LEFT, NK_BUTTON_LEFT},
+  {GLFW_MOUSE_BUTTON_MIDDLE, NK_BUTTON_MIDDLE},
+  {GLFW_MOUSE_BUTTON_RIGHT, NK_BUTTON_RIGHT}
+};
+
+static std::map<int, nk_keys> modKeyTable
+{
+  {GLFW_KEY_C, NK_KEY_COPY},
+  {GLFW_KEY_V, NK_KEY_PASTE},
+  {GLFW_KEY_X, NK_KEY_CUT},
+  {GLFW_KEY_Z, NK_KEY_TEXT_UNDO},
+  {GLFW_KEY_R, NK_KEY_TEXT_REDO},
+  {GLFW_KEY_A, NK_KEY_TEXT_SELECT_ALL}
+};
