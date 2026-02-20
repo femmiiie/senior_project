@@ -29,7 +29,7 @@ public:
   glm::mat4 getViewMatrix()       const { return viewMatrix; }
   glm::mat4 getProjectionMatrix() const { return projectionMatrix; }
 
-  Settings::ProjectionType& getProjectionType_M() { return type; }
+  // Settings::ProjectionType& getProjectionType_M() { return type; }
   float& getFOV_M()    { return fov; }
   float& getAspect_M() { return aspectRatio; }
   float& getNear_M()   { return nearClip; }
