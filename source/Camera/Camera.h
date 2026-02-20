@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Settings.h"
+// #include "Settings.h"
 
 // View matrix is updated immediately on position change.
 // Projection matrix is recomputed lazily via update().
@@ -54,7 +54,7 @@ private:
   glm::mat4 viewMatrix       = glm::mat4(1.0f);
   glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
-  Settings::ProjectionType type = Settings::PERSPEC;
+  // Settings::ProjectionType type = Settings::PERSPEC;
   float aspectRatio = 16.0f / 9.0f;
   float fov         = glm::radians(45.0f);
   float nearClip    = 0.1f;
