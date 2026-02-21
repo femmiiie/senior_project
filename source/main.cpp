@@ -18,6 +18,8 @@
 #include <vector>
 #include <cstring>
 
+#include "tesselation.h"
+
 using namespace wgpu;
 
 // We embbed the source of the shader module here

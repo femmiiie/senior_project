@@ -45,7 +45,7 @@ if(EMSCRIPTEN) # Building for WASM is still kinda broken, need to fix
 else() # WGPU or DAWN backend
   # Common dependencies for native backends
   if(MINGW)
-    set(WEBGPU_BACKEND "WGPU_NATIVE" CACHE STRING "" FORCE)
+    set(WEBGPU_BACKEND "WGPU" CACHE STRING "" FORCE)
     set(WGPU_NATIVE_RUNTIME "gnu" CACHE STRING "" FORCE)
   endif()
 
@@ -94,9 +94,14 @@ else() # WGPU or DAWN backend
   if(BACKEND STREQUAL "WGPU")
     add_custom_command(TARGET ipass_webgpu POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "${CMAKE_BINARY_DIR}/_deps/wgpu-windows-x86_64-msvc-release-src/lib/wgpu_native.dll"
+      "${CMAKE_BINARY_DIR}/_deps/wgpu-windows-x86_64-gnu-release-src/lib/wgpu_native.dll"
       "$<TARGET_FILE_DIR:ipass_webgpu>"
       COMMENT "Copying wgpu_native.dll to output directory"
     )
   endif()
+endif()
+
+if(NOT EMSCRIPTEN)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
