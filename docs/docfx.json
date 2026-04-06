@@ -21,13 +21,15 @@
     "output": "_site",
     "template": [
       "default",
-      "modern"
+      "modern",
+      "templates/glassy"
     ],
     "globalMetadata": {
       "_appName": "iPASS on WebGPU",
       "_appTitle": "iPASS on WebGPU",
       "_enableSearch": true,
-      "pdf": false
+      "pdf": false,
+      "_appLogoPath": "images/logo.png"
     }
   }
 }
