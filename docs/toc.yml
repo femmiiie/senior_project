@@ -1,5 +1,5 @@
-- name: Introduction
-  href: introduction.md
+- name: About
+  href: about.md
 - name: Getting Started
   href: getting-started.md  
 - name: API

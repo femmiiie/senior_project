@@ -2,10 +2,12 @@
 _layout: landing
 ---
 
-# This is the **HOMEPAGE**.
+# Welcome to the **iPASS on WebGPU** documentation.
 
-Refer to [Markdown](http://daringfireball.net/projects/markdown/) for how to write markdown files.
+This online documentation primarily serves as a reference for the provided library's API, <u>*not*</u> a rigorous exploration of the iPASS algorithm or the implementation.
 
-## Quick Start Notes:
+## Quick Links:
 
-1. Add images to the *images* folder if the file is referencing an image.
+1. Visit [About](/about) to learn more about what this project is and what it does.
+2. Visit [Getting Started](/getting-started) for installation and setup instructions.
+3. Visit [API](/api) to access the api documentation
