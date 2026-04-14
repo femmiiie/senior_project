@@ -8,6 +8,6 @@ This online documentation primarily serves as a reference for the provided libra
 
 ## Quick Links:
 
-1. Visit [About](/about) to learn more about what this project is and what it does.
-2. Visit [Getting Started](/getting-started) for installation and setup instructions.
-3. Visit [API](/api) to access the api documentation
+1. Visit [About](about) to learn more about what this project is and what it does.
+2. Visit [Getting Started](getting-started) for installation and setup instructions.
+3. Visit [API](api) to access the api documentation

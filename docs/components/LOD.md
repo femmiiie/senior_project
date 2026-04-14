@@ -20,10 +20,10 @@ Standalone compute pass that determines the tessellation level for each patch ba
  
 **Public Methods**
  
-- [`Status`](/components/PatchData#enum-status) ` UploadPatches(const` [`PatchData`](/components/PatchData#struct-patchdata)`& data)`: Uploads patch data to the GPU for LOD computation.
+- [`Status`](PatchData#enum-status) ` UploadPatches(const` [`PatchData`](PatchData#struct-patchdata)`& data)`: Uploads patch data to the GPU for LOD computation.
 - `void SetMVP(const glm::mat4& mvp)`: Sets the model-view-projection matrix used for LOD calculations.
 - `void SetViewport(float width, float height)`: Sets the viewport dimensions used for LOD calculations.
-- [`Status`](/components/PatchData#enum-status) ` Dispatch(wgpu::CommandEncoder& encoder)`: Records the LOD compute pass into the command encoder.
+- [`Status`](PatchData#enum-status) ` Dispatch(wgpu::CommandEncoder& encoder)`: Records the LOD compute pass into the command encoder.
 - `wgpu::Buffer GetLODBuffer() const`: Returns the GPU buffer containing the computed LOD values.
 - `uint32_t GetPatchCount() const`: Returns the number of patches currently loaded.
  

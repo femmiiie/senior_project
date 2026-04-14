@@ -20,8 +20,8 @@ Standalone compute pass that generates tessellated vertex data from patch contro
 
 **Public Methods**
 
-- [`Status`](/components/PatchData#enum-status) ` UploadPatches(const` [`PatchData`](/components/PatchData#struct-patchdata)`& data, wgpu::Buffer lod_buffer)`: Uploads patch data and binds an external LOD buffer for tessellation.
-- [`Status`](/components/PatchData#enum-status) ` Dispatch(wgpu::CommandEncoder& encoder)`: Records the tessellation compute pass into the command encoder.
+- [`Status`](PatchData#enum-status) ` UploadPatches(const` [`PatchData`](PatchData#struct-patchdata)`& data, wgpu::Buffer lod_buffer)`: Uploads patch data and binds an external LOD buffer for tessellation.
+- [`Status`](PatchData#enum-status) ` Dispatch(wgpu::CommandEncoder& encoder)`: Records the tessellation compute pass into the command encoder.
 - `wgpu::Buffer GetVertexBuffer() const`: Returns the GPU buffer containing the tessellated vertex output.
 - `uint32_t GetMaxVertexCount() const`: Returns the maximum number of vertices the output buffer can hold.
 - `uint32_t GetPatchCount() const`: Returns the number of patches currently loaded.
