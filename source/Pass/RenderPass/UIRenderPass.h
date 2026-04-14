@@ -38,9 +38,19 @@ public:
   wgpu::VertexAttribute CreateAttribute(glm::u32 location, wgpu::VertexFormat format, uint64_t offset);
 
   nk_context* getUIContext() { return &uiContext; }
-  void SetDebugData(const std::vector<float>& data);
+  void SetDebugData(std::vector<float> data) { this->debugData = std::move(data); }
 
 private:
+  void ApplyScaledStyles();
+  void RenderMainPanel(glm::vec2 menu_size);
+  void RenderObjectPropertiesSection();
+  void RenderDebugSection();
+  void RenderSettingsSection(glm::vec2 menu_size);
+  void RenderShadingLegend(glm::vec2 menu_size);
+  void RenderPerformanceWindow();
+  bool DrawCombo(std::vector<const char*> items, glm::u32& selected);
+  void ComponentLabel(nk_context* ctx, const char* text);
+
   nk_context uiContext;
   nk_font_atlas atlas;
   nk_buffer cmds, verts, idx;
@@ -59,4 +69,6 @@ private:
   wgpu::Texture texture;
   wgpu::Buffer indexBuffer;
   wgpu::Buffer projectionBuffer;
+
+  nk_flags subwindowFlags = NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_TITLE;
 };

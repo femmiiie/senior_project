@@ -16,9 +16,10 @@
 #include <array>
 #include <string>
 #include <exception>
-#include <optional>
+#include <functional>
 
 #include "Context.h"
+#include "BVParser.h"
 #include "IPass.h"
 #include "TessellatorPass.h"
 #include "SceneRenderPass.h"
@@ -54,21 +55,25 @@ private:
   TessellatorPass *tessPass = nullptr;
 
   void UpdateSceneViewport();
+  void LoadParser(const BVParser& parser);
   wgpu::RenderPassDescriptor GetRenderDescriptor(wgpu::TextureView& view,
     wgpu::RenderPassColorAttachment& colorAttachment,
-    wgpu::RenderPassDepthStencilAttachment& depthStencilAttachment);
+    wgpu::RenderPassDepthStencilAttachment& depthStencilAttachment
+  );
   void Initialize();
   void ConfigureSurface();
-  void MapBufferForRead(wgpu::Buffer& buffer, uint64_t size, bool* outFlag);
+  void MapBufferForRead(wgpu::Buffer& buffer, uint64_t size, std::function<void()> onSuccess);
   void GetSurfaceFormat();
 
-  struct DebugInspect {
-    wgpu::Buffer buffer;
-    uint64_t size = 0;
-  };
-  std::optional<DebugInspect> pendingDebugInspect;
-  bool debugMapped = false;
-  std::vector<float> debugReadback;
+  wgpu::Texture texture;
+
+  wgpu::Buffer stagingBuffer;
+  uint64_t     stagingSize  = 0;
+  bool         stagingBusy  = false;
+  std::vector<glm::f32> debugReadback;
+
+  wgpu::Buffer triCountStagingBuffer;
+  bool         triCountStagingBusy = false;
 };
 
 class RendererException : public std::exception
