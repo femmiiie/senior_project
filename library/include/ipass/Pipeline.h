@@ -46,6 +46,7 @@ public:
     Status DispatchTessellation(WGPUCommandEncoder& encoder) { return DispatchTessellation(wgpu::CommandEncoder(encoder)); }
     Status DispatchTessellation(wgpu::CommandEncoder& encoder);
     
+    Status Execute(WGPUCommandEncoder& encoder) { return Execute(wgpu::CommandEncoder(encoder)); }
     Status Execute(wgpu::CommandEncoder& encoder);
 
     wgpu::Buffer GetVertexBuffer() const;
