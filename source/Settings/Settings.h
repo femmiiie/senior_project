@@ -13,9 +13,13 @@
 struct TessOutput {
   wgpu::Buffer buffer = nullptr;
   uint32_t vertexCount = 0;
+  wgpu::Buffer controlPoints = nullptr;
+  uint32_t patchCount = 0;
+  uint32_t triangleCount = 0;
 };
 
-enum class ShadingMode { BlinnPhong = 0, Flat = 1 };
+enum class ShadingMode { BlinnPhong = 0, Flat = 1, ParametricError = 2, TriangleSize = 3 };
+enum class PresentModeSetting { Fifo = 0, Immediate = 1, Mailbox = 2 };
 
 class Settings
 {
@@ -38,6 +42,8 @@ public:
       this->needsUpdate = true;
       return this->value;
     }
+
+    bool pending() const { return this->needsUpdate; }
 
     bool observe() {
       bool state = this->needsUpdate;
@@ -68,7 +74,8 @@ public:
 
   static inline Setting<MVP> mvp = {MVP()};
 
-  static inline Setting<ShadingMode> shadingMode = {ShadingMode::BlinnPhong};
+  static inline Setting<ShadingMode>        shadingMode = {ShadingMode::BlinnPhong};
+  static inline Setting<PresentModeSetting> presentMode = {PresentModeSetting::Fifo};
 
   static inline glm::vec4 clearColor  = { 0.0f, 0.0f, 0.1f, 1.0f };
 

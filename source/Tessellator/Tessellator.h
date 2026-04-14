@@ -34,6 +34,8 @@ public:
     void Upload(const glm::vec4* control_points, const uint32_t* indices, uint32_t num_quads);
     bool Execute(wgpu::CommandEncoder encoder, uint32_t num_quads);
     wgpu::Buffer GetVertexOutput() const { return buf_verts_out; }
+    wgpu::Buffer GetControlPointBuffer() const { return buf_quads; }
+    wgpu::Buffer GetTriCountBuffer() const { return buf_bs_total; }
     void Terminate();
     void ClearBuffers();
 };

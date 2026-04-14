@@ -20,7 +20,8 @@ void Settings::checkUpdates()
     prevClearColor  = clearColor;
   }
 
-  tessellation.notify();
-  parser.notify();
-  shadingMode.notify();
+  if (tessellation.pending()) tessellation.notify();
+  if (parser.pending())      parser.notify();
+  if (shadingMode.pending()) shadingMode.notify();
+  if (presentMode.pending()) presentMode.notify();
 }
