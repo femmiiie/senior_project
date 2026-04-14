@@ -10,8 +10,8 @@ Standalone compute pass that determines the tessellation level for each patch ba
  
 **Constructors**
  
-- `LODPass(wgpu::Device device, const` [`Config`](/components/PatchData#struct-config)`& config = {})`: Creates an LOD pass using the given device and optional configuration.
-- `LODPass(wgpu::Device device, wgpu::Queue queue, const` [`Config`](/components/PatchData#struct-config)`& config = {})`: Creates an LOD pass using an explicit device and queue pair.
+- `LODPass(wgpu::Device device, const` [`Config`](PatchData#struct-config)`& config = {})`: Creates an LOD pass using the given device and optional configuration.
+- `LODPass(wgpu::Device device, wgpu::Queue queue, const` [`Config`](PatchData#struct-config)`& config = {})`: Creates an LOD pass using an explicit device and queue pair.
  
 **Copy/Move**
  

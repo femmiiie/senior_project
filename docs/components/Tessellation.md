@@ -10,8 +10,8 @@ Standalone compute pass that generates tessellated vertex data from patch contro
 
 **Constructors**
 
-- `TessellationPass(wgpu::Device device, const` [`Config`](/components/PatchData#struct-config)`& config = {})`: Creates a tessellation pass using the given device and optional configuration. Internally obtains the queue from the device.
-- `TessellationPass(wgpu::Device device, wgpu::Queue queue, const` [`Config`](/components/PatchData#struct-config)`& config = {})`: Creates a tessellation pass using an explicit device and queue pair.
+- `TessellationPass(wgpu::Device device, const` [`Config`](PatchData#struct-config)`& config = {})`: Creates a tessellation pass using the given device and optional configuration. Internally obtains the queue from the device.
+- `TessellationPass(wgpu::Device device, wgpu::Queue queue, const` [`Config`](PatchData#struct-config)`& config = {})`: Creates a tessellation pass using an explicit device and queue pair.
 
 **Copy/Move**
 
